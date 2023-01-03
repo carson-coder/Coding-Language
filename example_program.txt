@@ -1,7 +1,7 @@
 PRINT_ERR is true
 EXIT_ON_ERR is true
 
-< I will be in alot of pain making this>
+< I will be in alot of pain making this >
 
 a is 10
 
