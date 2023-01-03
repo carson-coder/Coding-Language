@@ -1,0 +1,22 @@
+PRINT_ERR is true
+EXIT_ON_ERR is true
+
+< I will be in alot of pain making this>
+
+a is 10
+
+start {
+    using a
+    code.Buffer.add(code.out(func(a, 15)))
+    code.Buffer.add(code.out("Hi"))
+    code.out("Hello")
+    code.Buffer.run()
+}
+
+code func(arg1 and arg2) {
+    if arg1 is arg2 {
+        return(arg1)
+    } else {
+        return(arg2)
+    }
+}

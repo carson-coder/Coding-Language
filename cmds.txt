@@ -1,0 +1,49 @@
+code is where all system vars are
+
+at the top EXIT_ON_ERR and PRINT_ERR can be defined
+if EXIT_ON_ERR is false then when there is a error then we dont exit. if its not defined then it is true
+if PRINT_ERR if false then error will not be printed. If EXIT_ON_ERR is true then this is true. By default this is also true
+
+define vars by 
+VARNAME is VALUE
+
+if statments are
+if VALUE is VALUE {
+
+}
+use "also" for and
+use "or" for or
+
+functions are defined by
+
+code FUNC_NAME(FUNC_ARGS) {
+    using VAR
+    CODE
+}
+
+requires saying what function to use with "using" key word. Does not need to use "using" with args. args are sperated by "and"
+
+looks for
+start {
+    CODE
+}
+for where to start
+
+ablity to buffer commands then run them
+
+code.Buffer.add("CMD")
+code.Buffer.remove("CMD")
+code.Buffer.run
+
+
+to output use
+code.out("TEXT")
+
+Comment syntax is
+< Comment >
+or
+< This
+is
+a
+multi-line
+Comment >
