@@ -1,3 +1,5 @@
+< "AAA This is here so i can use C syntax higliting in vscode" >
+
 PRINT_ERR is true
 EXIT_ON_ERR is true
 
