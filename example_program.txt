@@ -11,6 +11,7 @@ start {
     code.Buffer.add(code.out("Hi"))
     code.out("Hello")
     code.Buffer.run()
+    code.out("I hope I setup the github repo correctly")
 }
 
 code func(arg1 and arg2) {
