@@ -117,6 +117,7 @@ class Compiler():
         except ValueError:
             pass
         self.ready = True
+        print("[--------------Compiler has been initalized--------------]")
     def run(self):
         global Error
         global ErrorMsg
@@ -143,19 +144,22 @@ class Compiler():
                 out_code.append(func_code.copy())
                 func_code = []
             add_list = func_code if func else out_code
-            if "\"" in i:
+            if i.count("\"") == 1:
                 string = not string
                 if not string:
                     add_list.append(strtxt)
                     strtxt = ""
             if string:
                 strtxt += i
+            elif i.count("\"") == 2:
+                    strtxt = i[i.index("\""):i.find("\"", i.index("\""))]
+                    add_list.append(strtxt)
+                    strtxt = ""
             else:
-                add_list.append(i)
+                add_list.append(i.replace("{", ""))
         self.good_code = out_code
         
         # Make sure there is a start
-        print(self.good_code)
         start = False
         for i in self.good_code:
             if i[0].lower() == "start":
@@ -193,4 +197,5 @@ if DEV:
     a.init()
     a.run()
 
-    print(EXIT_ON_ERR, PRINT_ERR, DEBUG, a.code, a.parsed_code, a.ready, a.code_loaded, a.good_code)
+    #print(EXIT_ON_ERR, PRINT_ERR, DEBUG, a.code, a.parsed_code, a.ready, a.code_loaded, a.good_code)
+    
