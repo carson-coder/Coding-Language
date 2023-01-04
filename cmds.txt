@@ -24,7 +24,7 @@ code FUNC_NAME(FUNC_ARGS) {
 requires saying what function to use with "using" key word. Does not need to use "using" with args. args are sperated by "and"
 
 looks for
-start {
+code start {
     CODE
 }
 for where to start

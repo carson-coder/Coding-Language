@@ -19,8 +19,9 @@ DEV = False
 EXIT_ON_ERR = True
 PRINT_ERR = True
 
-class Code_Not_Loaded(Exception):
-    pass
+class Func(str): __name__ = "Function"
+
+class Code_Not_Loaded(Exception): pass
 
 if "-debug" in sys.argv:
     DEBUG = True
@@ -60,6 +61,8 @@ def get_type(txt):
 def err_check(self):
     global ErrorMsg
     global Error
+    global PRINT_ERR
+    global EXIT_ON_ERR
     """Checks if a error has been raised
     """
     ErrorMsg = ErrorMsg.replace("{Line}", str(self.line))
@@ -104,9 +107,11 @@ class Compiler():
     def init(self):
         global EXIT_ON_ERR
         global PRINT_ERR
+        global Error
+        global ErrorMsg
         if self.code_loaded != True:
             raise Code_Not_Loaded("Run load_code() before init()")
-        self.parsed_code = self.code.replace("\n", " ").split(" ")
+        self.parsed_code = self.code.split("\n")
         while "" in self.parsed_code:
             self.parsed_code.remove("")
         try:
@@ -116,6 +121,39 @@ class Compiler():
                     PRINT_ERR = False
         except ValueError:
             pass
+        
+        func = False
+        func_code = ""
+        func_name = ""
+        for i in self.parsed_code:
+            if "{" in i and i.split(" ")[0] == "code":
+                if func:
+                    Error = 1
+                    ErrorMsg = "Defining function in function"
+                    err_check(self)
+                    continue
+                func = True
+                func_name = i.split(" ")[1]
+            elif "}" in i:
+                if not func:
+                    Error = 1
+                    ErrorMsg = "Close function when not defining function"
+                    err_check(self)
+                    continue
+                func = False
+                func_code = func_code.removeprefix("code")
+                while func_code.startswith(" "): func_code = func_code.removeprefix(" ")
+                func_code = func_code.removeprefix(func_name)
+                while func_code.startswith(" "): func_code = func_code.removeprefix(" ")
+                func_code = func_code.removeprefix("{")
+                while func_code.startswith(" "): func_code = func_code.removeprefix(" ")
+                self.vars[func_name] = Func(func_code)
+                func_code = ""
+                
+            if func:
+                func_code += i + " "
+        self.good_code = self.parsed_code
+        
         self.ready = True
         print("[--------------Compiler has been initalized--------------]")
     def run(self):
@@ -126,46 +164,8 @@ class Compiler():
 
         # Run Code
         
-        # Parse More
-        
-        strtxt = ""
-        string = False
-        out_code = []
-        func = False
-        func_code = []
-        
-        for i in self.parsed_code:
-            if "{" in i:
-                func_code.append(out_code[len(out_code) - 1])
-                out_code.remove(out_code[len(out_code) - 1])
-                func = True
-            elif "}" in i:
-                func = False
-                out_code.append(func_code.copy())
-                func_code = []
-            add_list = func_code if func else out_code
-            if i.count("\"") == 1:
-                string = not string
-                if not string:
-                    add_list.append(strtxt)
-                    strtxt = ""
-            if string:
-                strtxt += i
-            elif i.count("\"") == 2:
-                    strtxt = i[i.index("\""):i.find("\"", i.index("\""))]
-                    add_list.append(strtxt)
-                    strtxt = ""
-            else:
-                add_list.append(i.replace("{", ""))
-        self.good_code = out_code
-        
         # Make sure there is a start
-        start = False
-        for i in self.good_code:
-            if i[0].lower() == "start":
-                if start: ErrorMsg, Error = "Too many start positions", 2
-                start = True
-        if not start: ErrorMsg, Error = "Start not found", 2
+        if "start" not in self.vars and type(self.vars["start"]) != Func: Error, ErrorMsg = 2, "No start provided. Or that we can find"
         
         err_check(self)
         
@@ -193,9 +193,9 @@ class Compiler():
         
 if DEV:
     a = Compiler()
-    a.load_code("EXIT_ON_ERR is false\nstart {\nA = \"A\"\nB =    10\n}")
+    a.load_code("code start {\nA = \"A\"\nB =    10\ncode.out(A)\ncode.out(\"Hi\")}\ncode func {\ncode.out(\"hi\")\n}")
     a.init()
     a.run()
 
-    #print(EXIT_ON_ERR, PRINT_ERR, DEBUG, a.code, a.parsed_code, a.ready, a.code_loaded, a.good_code)
+    print(a.vars)
     
