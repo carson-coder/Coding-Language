@@ -41,6 +41,8 @@ class Buffer():
             ErrorMsg = "Error on line: {Line}. Buffer doesn't contain value %s" % (cmd,)
 
 def get_type(txt):
+    global ErrorMsg
+    global Error
     """Get type of string
 
     Args:
@@ -56,9 +58,11 @@ def get_type(txt):
         return(None)
 
 def err_check(self):
+    global ErrorMsg
+    global Error
     """Checks if a error has been raised
     """
-    ErrorMsg = ErrorMsg.replace("{Line}", self.line)
+    ErrorMsg = ErrorMsg.replace("{Line}", str(self.line))
     if Error == 0:
         return
     elif Error == 1:
@@ -102,11 +106,13 @@ class Compiler():
         global PRINT_ERR
         if self.code_loaded != True:
             raise Code_Not_Loaded("Run load_code() before init()")
-        self.parsed_code = self.code.split("\n")
+        self.parsed_code = self.code.replace("\n", " ").split(" ")
+        while "" in self.parsed_code:
+            self.parsed_code.remove("")
         try:
-            if self.parsed_code.index("EXIT_ON_ERR is false") < 2:
+            if self.code.split("\n").index("EXIT_ON_ERR is false") < 2:
                 EXIT_ON_ERR = False
-                if self.parsed_code.index("PRINT_ERR is false") < 2:
+                if self.code.split("\n").index("PRINT_ERR is false") < 2:
                     PRINT_ERR = False
         except ValueError:
             pass
@@ -120,30 +126,71 @@ class Compiler():
         # Run Code
         
         # Parse More
+        
+        strtxt = ""
+        string = False
+        out_code = []
+        func = False
+        func_code = []
+        
         for i in self.parsed_code:
-            parts = i.split(" ")
-            while "" in parts:
-                parts.remove("")
-                
-            # Define Var
-            if "is" in parts:
-                if len(parts) != 3 or get_type(parts[2]) == None:
-                    Error = 2
-                    ErrorMsg = "Var Definition on line {Line} has more or less then 3 words (%s)" % (len(parts),)
-                    err_check(self)
-                else:
-                    a = get_type(parts[2])
-                    self.vars[parts[0]] = a(parts[2])
+            if "{" in i:
+                func_code.append(out_code[len(out_code) - 1])
+                out_code.remove(out_code[len(out_code) - 1])
+                func = True
+            elif "}" in i:
+                func = False
+                out_code.append(func_code.copy())
+                func_code = []
+            add_list = func_code if func else out_code
+            if "\"" in i:
+                string = not string
+                if not string:
+                    add_list.append(strtxt)
+                    strtxt = ""
+            if string:
+                strtxt += i
+            else:
+                add_list.append(i)
+        self.good_code = out_code
+        
         # Make sure there is a start
-        if "start {" not in self.parsed_code: ErrorMsg, Error = "Start not found", 2
-        if self.parsed_code.count("start {") > 1: ErrorMsg, Error = "Too many starts", 2
+        print(self.good_code)
+        start = False
+        for i in self.good_code:
+            if i[0].lower() == "start":
+                if start: ErrorMsg, Error = "Too many start positions", 2
+                start = True
+        if not start: ErrorMsg, Error = "Start not found", 2
         
         err_check(self)
+        
+        # self.line = self.parsed_code.index("start {") + 1
+        # while self.line < len(self.parsed_code):
+        #     i = self.parsed_code[self.line]
+        #     err_check(self)
+        #     parts = i.split(" ")
+        #     while "" in parts:
+        #         parts.remove("")
+                
+        #     # Check for varible definition
+        #     if "is" in parts and "if" not in parts:
+        #         if len(parts) != 3 or get_type(parts[2]) == None:
+        #             Error = 2
+        #             ErrorMsg = "Var Definition on line {Line} has more or less then 3 words (%s)" % (len(parts),)
+        #             err_check(self)
+        #         else:
+        #             a = get_type(parts[2])
+        #             self.vars[parts[0]] = a(parts[2])
+            
+            
+        #     self.line += 1
         
         
 if DEV:
     a = Compiler()
-    a.load_code("EXIT_ON_ERR is false")
+    a.load_code("EXIT_ON_ERR is false\nstart {\nA = \"A\"\nB =    10\n}")
     a.init()
+    a.run()
 
-    print(EXIT_ON_ERR, PRINT_ERR, DEBUG, a.code, a.parsed_code, a.ready, a.code_loaded)
+    print(EXIT_ON_ERR, PRINT_ERR, DEBUG, a.code, a.parsed_code, a.ready, a.code_loaded, a.good_code)
