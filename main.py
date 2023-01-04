@@ -12,7 +12,7 @@ global DEBUG
 global Error
 global ErrorMsg
 global DEV
-Error = False
+Error = 0
 ErrorMsg = "You shouldn't see this"
 DEBUG = False
 DEV = False
@@ -37,10 +37,45 @@ class Buffer():
         try:
             self.buffer.remove(cmd)
         except ValueError:
-            Error = True
+            Error = 1
             ErrorMsg = "Error on line: {Line}. Buffer doesn't contain value %s" % (cmd,)
 
+def get_type(txt):
+    """Get type of string
+
+    Args:
+        txt (str): the text to get type of
+    """
+    if txt.count("\"") == 2:
+        return(str)
+    elif txt.isdigit():
+        return(int)
+    else:
+        Error = 1
+        ErrorMsg = f"{txt} is not a str or int"
+        return(None)
+
+def err_check(self):
+    """Checks if a error has been raised
+    """
+    ErrorMsg = ErrorMsg.replace("{Line}", self.line)
+    if Error == 0:
+        return
+    elif Error == 1:
+        if PRINT_ERR:
+            print(f"Error: {ErrorMsg}")
+        if EXIT_ON_ERR:
+            exit()
+        else:
+            error = 0
+    else:
+        print(f"Critical Error: {ErrorMsg}")
+        exit()
 class Compiler():
+    line = 0
+    code_loaded = False
+    ready = False
+    vars = {}
     def load_code(self, code: str|io.TextIOWrapper):
         """Load code. Supports files, files locations, and raw code.
 
@@ -76,7 +111,36 @@ class Compiler():
         except ValueError:
             pass
         self.ready = True
+    def run(self):
+        global Error
+        global ErrorMsg
+        if not(self.ready and self.code_loaded):
+            raise Code_Not_Loaded("Code has not been initalized. run init() to initialize code after loading")
 
+        # Run Code
+        
+        # Parse More
+        for i in self.parsed_code:
+            parts = i.split(" ")
+            while "" in parts:
+                parts.remove("")
+                
+            # Define Var
+            if "is" in parts:
+                if len(parts) != 3 or get_type(parts[2]) == None:
+                    Error = 2
+                    ErrorMsg = "Var Definition on line {Line} has more or less then 3 words (%s)" % (len(parts),)
+                    err_check(self)
+                else:
+                    a = get_type(parts[2])
+                    self.vars[parts[0]] = a(parts[2])
+        # Make sure there is a start
+        if "start {" not in self.parsed_code: ErrorMsg, Error = "Start not found", 2
+        if self.parsed_code.count("start {") > 1: ErrorMsg, Error = "Too many starts", 2
+        
+        err_check(self)
+        
+        
 if DEV:
     a = Compiler()
     a.load_code("EXIT_ON_ERR is false")
